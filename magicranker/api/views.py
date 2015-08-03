@@ -23,17 +23,15 @@ def rank(request):
         else:
             limit = 50
 
-        data = cache.get(hash(request.body))
-        if not data:
+        rank_results = cache.get(hash(request.body))
+        if not rank_results:
             ranker = Ranker(
                 rank_methods, filter_methods, limit)
             data = ranker.process()
-
+            rank_results = data.to_json(orient='records')
             cache.set(
                 hash(request.body),
-                data,  60*60*24)
-
-        rank_results = data.to_json(orient='records')
+                rank_results,  60*60*24)
     else:
         rank_results = json.dumps([])
 

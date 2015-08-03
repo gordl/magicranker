@@ -188,3 +188,5 @@ if not is_dev:
     RAVEN_CONFIG = {'dsn': private.RAVEN_DSN}
     COMPRESS_ENABLED = True
     COMPRESS_OFFLINE = True
+
+STOCK_EXCHANGE = getattr(private, "STOCK_EXCHANGE", "asx")

@@ -1,22 +1,29 @@
 from datetime import datetime, timedelta
 import logging
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from magicranker.backend.scrapers import asx
+from magicranker.backend.scrapers import asx, nasdaq_lister
 from magicranker.stock.models import Detail
-
 
 class Command(BaseCommand):
     help = 'Scrape ASX.com.au and get updated list of stocks'
+
+    def _get_exchange_stock_list(self):
+        #Get list of symbols, default to asx.
+        if settings.STOCK_EXCHANGE == "asx":
+            return asx.get_full_stock_list()
+        else:
+            return nasdaq_lister.get_stock_list(settings.STOCK_EXCHANGE)
 
     def _get_full_stock_list(self):
         """
         Get the full stock list using the asx module
         and add it to the database
         """
-        # Get the list of stocks from the ASX as a list
-        stocks = asx.get_full_stock_list()
+        # Get list of symbols
+        stocks = self._get_exchange_stock_list()
 
         # Get today's date
         today = datetime.today()

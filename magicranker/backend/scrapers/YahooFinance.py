@@ -4,9 +4,18 @@ import logging
 from datetime import datetime
 import HTMLParser
 
+from django.conf import settings
+
 from BeautifulSoup import BeautifulSoup
 import utils
 
+def get_postfix():
+    if settings.STOCK_EXCHANGE == "asx":
+        return ".AX"
+    else:
+        return ""
+
+POSTFIX = get_postfix()
 
 def format_title(title):
     title = re.sub(r'(\&nbsp\;|\,|\n|\-|\')', '', str(title).strip())
@@ -77,7 +86,8 @@ class YahooFinance():
         Save the open and close price to the database
         """
         url = 'http://download.finance.yahoo.com/d'
-        url += '/quotes.csv?s={0}.AX&f=sl1d1t1c1ohgv&e=.csv'.format(self.stock)
+        url += '/quotes.csv?s={0}{1}&f=sl1d1t1c1ohgv&e=.csv'\
+            .format(self.stock, POSTFIX)
         page = utils.get_page(url)
         values = None
         if page:
@@ -117,7 +127,7 @@ class YahooFinance():
         h = HTMLParser.HTMLParser()
         # Get the page data
         url = 'http://finance.yahoo.com/q/'
-        url += 'pr?s={0}.AX+Profile'.format(self.stock)
+        url += 'pr?s={0}{1}+Profile'.format(self.stock, POSTFIX)
         page = utils.get_page(url)
         soup = BeautifulSoup(page)
 
@@ -130,7 +140,7 @@ class YahooFinance():
                 "Couldn't find a title for {0}".format(self.stock))
             logging.error(error)
             name = ''
-        name = str(re.sub(r'(\ \(\w\w\w\.\w\w\))', '', name))
+        name = re.sub(r'(\ \(\w\w\w\.\w\w\))', '', name)
 
         # Now, scrape the description
         try:
@@ -151,7 +161,7 @@ class YahooFinance():
         and return as tuple
         """
         url = 'http://finance.yahoo.com/q/'
-        url = url + 'ks?s={0}.AX+Key+Statistics'.format(self.stock)
+        url = url + 'ks?s={0}{1}+Key+Statistics'.format(self.stock, POSTFIX)
         content = utils.get_page(url)
         soup = BeautifulSoup(''.join(str(content)))
 
@@ -271,7 +281,7 @@ class YahooFinance():
         """
         output = {}
         url = 'http://finance.yahoo.com/q/'
-        url += 'bs?s={0}.AX+Balance+Sheet&annual'.format(self.stock.code)
+        url += 'bs?s={0}{1}+Balance+Sheet&annual'.format(self.stock.code, POSTFIX)
 
         try:
             soup = BeautifulSoup(utils.get_page(url))
